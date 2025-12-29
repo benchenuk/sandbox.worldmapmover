@@ -40,12 +40,19 @@ The application will be a client-side Single Page Application (SPA) with no back
     4.  `originalLayer` style: Dimmed/Outlined.
 
 - **Dragging Mechanism**:
-    - **Logic**: Leaflet does not natively support "dragging a polygon with projection distortion" out of the box (it usually drags pixels). We will implement a custom drag handler:
+    - **Event Handling**: 
+        - The `mousedown` event is attached to the `floatingLayer` (selected country) only, not the entire map.
+        - This allows users to pan the map normally by clicking/dragging on empty areas.
+        - Country dragging only initiates when clicking directly on the selected country.
+        - Event propagation is stopped (`L.DomEvent.stopPropagation()`) to prevent interference with map panning.
+    - **Logic**: Leaflet does not natively support "dragging a polygon with projection distortion" out of the box (it usually drags pixels). We implement a custom drag handler:
+        - Listen for `mousedown` on the floating layer to start dragging.
         - Listen for global `mousemove` when dragging.
+        - Listen for global `mouseup` to end dragging.
         - Calculate `deltaPos` (pixel difference) from start drag point.
         - Convert `deltaPos` to `deltaLatLng`? No.
         - **Better Approach**: 
-            - On `mousedown`, record `startLatLng`.
+            - On `mousedown` (on floating layer), record `startLatLng`.
             - On `mousemove`, get `currentLatLng` of mouse.
             - `deltaLat = currentLatLng.lat - startLatLng.lat`
             - `deltaLng = currentLatLng.lng - startLatLng.lng`
@@ -54,6 +61,7 @@ The application will be a client-side Single Page Application (SPA) with no back
                 - Iterate through all coordinates of the GeoJSON polygon.
                 - New Coordinate = `(originalLat + deltaLat, originalLng + deltaLng)`.
             - Update `floatingLayer` with new GeoJSON.
+        - **Cleanup**: Remove event listeners when resetting or selecting a new country to prevent memory leaks.
     - **Distortion Handling**: By modifying the LatLng coordinates directly and letting Leaflet render them, the Web Mercator projection will automatically handle the size/shape distortion (e.g., countries will stretch vertically as they move North).
 
 ### 2.4 User Interface
@@ -64,6 +72,23 @@ The application will be a client-side Single Page Application (SPA) with no back
     - **Info Panel** (Bottom Left):
         - Shows "Moving: [Country Name]".
         - "Current Lat: [Value]".
+
+- **Country Labels**:
+    - **Implementation**: Use Leaflet DivIcon markers positioned at country centroids.
+    - **Centroid Calculation**: 
+        - For Polygons: Use the outer ring coordinates.
+        - For MultiPolygons: Use the largest polygon's coordinates.
+        - Calculate average latitude/longitude from all coordinates.
+    - **Styling**:
+        - Font: 'Outfit', sans-serif
+        - Default: 12px, opacity 0.5, font-weight 400
+        - Hovered: opacity 0.9, font-weight 500
+        - Selected: 14px, opacity 1.0, font-weight 600
+        - Text shadow for readability against map background
+    - **Interaction**:
+        - Labels are non-interactive (pointer-events: none)
+        - Opacity updates dynamically based on country interaction state
+        - Smooth transitions (0.3s) between states
 
 ## 3. Data Structure
 - `data/countries.json`: Standard GeoJSON FeatureCollection.
@@ -82,3 +107,6 @@ The application will be a client-side Single Page Application (SPA) with no back
 - **Performance**:
     - GeoJSON simplification might be needed for complex borders (e.g., Canada, Norway) to ensure 60fps dragging.
     - Use `canvas` renderer in Leaflet for better performance with large vector datasets if SVG effectively lags.
+- **Interaction**:
+    - Map panning remains fully responsive even when a country is selected.
+    - Event listeners are properly cleaned up to prevent memory leaks when switching countries or resetting.

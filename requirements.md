@@ -13,7 +13,8 @@ A web-based application that allows users to interactively select a country and 
 
 ### 2.2 Moving the Country
 - Once selected, a "ghost" or "clone" of the country's shape is created.
-- The user can drag this shape anywhere on the map using the mouse or touch interface.
+- The user can drag this shape anywhere on the map by clicking and dragging **on the selected country itself**.
+- **Map Panning**: Users can still pan the map freely by clicking and dragging on any empty area (ocean, other countries, etc.) even when a country is selected.
 - **Real-time Distortion**: As the shape is dragged north or south, it must dynamically resize and reshape according to the Mercator projection rules (e.g., expanding significantly as it approaches the poles).
 
 ### 2.3 Constrained Movement (Snap to Latitude)
@@ -25,6 +26,10 @@ A web-based application that allows users to interactively select a country and 
 - The original country location remains visible (potentially dimmed or outlined) to allow comparison.
 - The moving country should be semi-transparent or distinctively colored.
 - Display current coordinates (Latitude/Longitude) of the center of the moving country.
+- **Country Labels**: Display country names at their geographic centroids with dynamic opacity:
+    - Selected country: Full opacity (100%) with bold text
+    - Hovered country: High opacity (90%) with medium weight text
+    - Other countries: Low opacity (30-50%) to reduce visual clutter
 
 ## 3. User Interface Requirements
 - **Main Map Area**: A full-screen or large interactive world map.

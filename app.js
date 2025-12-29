@@ -16,6 +16,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png
 
 // State
 let countriesLayer;
+let countryLabels; // Layer group for country labels
 let floatingLayer = null;
 let originalFeature = null;
 let selectedFeature = null;
@@ -47,8 +48,118 @@ fetch('countries.json')
             },
             onEachFeature: onEachFeature
         }).addTo(map);
+
+        // Create country labels
+        createCountryLabels(data);
     })
     .catch(err => console.error('Error loading GeoJSON:', err));
+
+// Create Country Labels
+function createCountryLabels(geojson) {
+    countryLabels = L.layerGroup().addTo(map);
+
+    geojson.features.forEach(feature => {
+        const name = feature.properties.name || feature.properties.admin || '';
+        if (!name) return;
+
+        // Calculate centroid
+        const centroid = getCentroid(feature.geometry);
+        if (!centroid) return;
+
+        // Create label marker
+        const label = L.marker([centroid.lat, centroid.lng], {
+            icon: L.divIcon({
+                className: 'country-label',
+                html: `<span class="country-label-text" data-country-id="${feature.id}">${name}</span>`,
+                iconSize: null
+            }),
+            interactive: false,
+            pane: 'markerPane'
+        });
+
+        label.featureId = feature.id;
+        label.addTo(countryLabels);
+    });
+}
+
+// Calculate centroid of a geometry
+function getCentroid(geometry) {
+    let coords = [];
+
+    if (geometry.type === 'Polygon') {
+        coords = geometry.coordinates[0]; // Outer ring
+    } else if (geometry.type === 'MultiPolygon') {
+        // Use the largest polygon
+        let largest = geometry.coordinates[0][0];
+        geometry.coordinates.forEach(poly => {
+            if (poly[0].length > largest.length) {
+                largest = poly[0];
+            }
+        });
+        coords = largest;
+    } else {
+        return null;
+    }
+
+    // Calculate average lat/lng
+    let sumLat = 0, sumLng = 0;
+    coords.forEach(coord => {
+        sumLng += coord[0];
+        sumLat += coord[1];
+    });
+
+    return {
+        lat: sumLat / coords.length,
+        lng: sumLng / coords.length
+    };
+}
+
+// Update label opacity based on interaction state
+function updateLabelOpacity(featureId = null, state = 'default') {
+    if (!countryLabels) return;
+
+    countryLabels.eachLayer(layer => {
+        const labelElement = layer.getElement();
+        if (!labelElement) return;
+
+        const textElement = labelElement.querySelector('.country-label-text');
+        if (!textElement) return;
+
+        if (featureId && layer.featureId === featureId) {
+            // Highlighted/Selected country
+            if (state === 'selected') {
+                textElement.style.opacity = '1';
+                textElement.style.fontWeight = '600';
+                textElement.style.fontSize = '14px';
+            } else if (state === 'hover') {
+                textElement.style.opacity = '0.9';
+                textElement.style.fontWeight = '500';
+            }
+        } else {
+            // Other countries - less visible
+            textElement.style.opacity = '0.3';
+            textElement.style.fontWeight = '400';
+            textElement.style.fontSize = '12px';
+        }
+    });
+}
+
+// Reset all labels to default state
+function resetAllLabels() {
+    if (!countryLabels) return;
+
+    countryLabels.eachLayer(layer => {
+        const labelElement = layer.getElement();
+        if (!labelElement) return;
+
+        const textElement = labelElement.querySelector('.country-label-text');
+        if (!textElement) return;
+
+        textElement.style.opacity = '0.5';
+        textElement.style.fontWeight = '400';
+        textElement.style.fontSize = '12px';
+    });
+}
 
 // Interaction Handlers
 function onEachFeature(feature, layer) {
@@ -61,7 +172,7 @@ function onEachFeature(feature, layer) {
 
 function highlightFeature(e) {
     if (selectedFeature && e.target.feature.id === selectedFeature.id) return;
-    
+
     const layer = e.target;
     layer.setStyle({
         weight: 2,
@@ -69,11 +180,21 @@ function highlightFeature(e) {
         fillOpacity: 0.8
     });
     layer.bringToFront();
+
+    // Highlight label on hover
+    updateLabelOpacity(e.target.feature.id, 'hover');
 }
 
 function resetHighlight(e) {
     if (selectedFeature && e.target.feature.id === selectedFeature.id) return;
     countriesLayer.resetStyle(e.target);
+
+    // Reset labels when not hovering
+    if (!selectedFeature) {
+        resetAllLabels();
+    } else {
+        updateLabelOpacity(selectedFeature.id, 'selected');
+    }
 }
 
 function selectCountry(e) {
@@ -81,6 +202,10 @@ function selectCountry(e) {
 
     // Reset previous selection
     if (floatingLayer) {
+        // Clean up event listeners
+        floatingLayer.off('mousedown', onCountryDragStart);
+        map.off('mousemove', onDragMove);
+        map.off('mouseup', onDragEnd);
         map.removeLayer(floatingLayer);
         floatingLayer = null;
     }
@@ -116,29 +241,29 @@ function selectCountry(e) {
     updateInfoCoords(e.latlng);
     infoPanel.classList.remove('hidden');
 
-    // Init Drag Logic immediately on click? 
-    // Usually user clicks to select, then drags. 
-    // Let's make the floating layer draggable.
-    
-    // Add custom drag handlers to map for the floating layer
-    map.on('mousedown', onDragStart);
+    // Highlight selected country label
+    updateLabelOpacity(selectedFeature.id, 'selected');
+
+    // Add drag handlers to the floating layer itself
+    floatingLayer.on('mousedown', onCountryDragStart);
     map.on('mousemove', onDragMove);
     map.on('mouseup', onDragEnd);
 }
 
 // Drag Logic with Coordinate Math
-function onDragStart(e) {
-    // Check if we are clicking ON the floating layer or near it? 
-    // For better UX, let's treat any click after selection as a drag start if we have a selection?
-    // Or strictly click on the polygon.
-    // Simplifying: If we have a floating layer, hitting mousedown on map starts drag.
+function onCountryDragStart(e) {
+    // Only start dragging if we click on the floating layer
     if (!floatingLayer) return;
-    
+
+    // Prevent the event from propagating to the map (which would start map panning)
+    L.DomEvent.stopPropagation(e.originalEvent);
+    L.DomEvent.preventDefault(e.originalEvent);
+
     isDragging = true;
-    map.dragging.disable(); // Disable map panning
+    map.dragging.disable(); // Disable map panning while dragging country
     dragStartLatLng = e.latlng;
-    
-    // Capture deep copy of coordinates at text start
+
+    // Capture deep copy of coordinates at drag start
     // GeoJSON coordinates can be MultiPolygon (nested arrays)
     // We need a reliable way to transform them.
     dragStartCoordinates = JSON.parse(JSON.stringify(floatingLayer.toGeoJSON().features[0].geometry.coordinates));
@@ -184,7 +309,7 @@ function shiftCoordinates(coords, dLat, dLng, type) {
         // [lng, lat]
         return [coords[0] + dLng, coords[1] + dLat];
     }
-    
+
     return coords.map(sub => shiftCoordinates(sub, dLat, dLng, type));
 }
 
@@ -200,6 +325,10 @@ snapToggle.addEventListener('change', (e) => {
 
 resetBtn.addEventListener('click', () => {
     if (floatingLayer) {
+        // Clean up event listeners
+        floatingLayer.off('mousedown', onCountryDragStart);
+        map.off('mousemove', onDragMove);
+        map.off('mouseup', onDragEnd);
         map.removeLayer(floatingLayer);
         floatingLayer = null;
     }
@@ -211,4 +340,7 @@ resetBtn.addEventListener('click', () => {
     infoPanel.classList.add('hidden');
     isDragging = false;
     map.dragging.enable();
+
+    // Reset all labels to default
+    resetAllLabels();
 });
