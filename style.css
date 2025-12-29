@@ -1,0 +1,172 @@
+:root {
+    --primary-color: #3b82f6;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --text-main: #1f2937;
+    --text-secondary: #6b7280;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Map Container */
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: #f8fafc; /* Fallback */
+}
+
+/* Glassmorphism Panels */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: absolute;
+    z-index: 1000;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+/* Controls Overlay */
+#controls {
+    top: 2rem;
+    right: 2rem;
+    width: 320px;
+}
+
+#controls h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+/* Buttons */
+.btn-secondary {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: var(--text-main);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+}
+
+/* Info Panel */
+#info-panel {
+    bottom: 2rem;
+    left: 2rem;
+    min-width: 200px;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+}
+
+#info-panel h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.coords {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: 1rem;
+}
+
+/* Map Popups / Tooltips Customization can go here */
+.leaflet-interactive {
+    transition: fill-opacity 0.2s;
+    cursor: grab;
+}
+
+.leaflet-grabbing {
+    cursor: grabbing;
+}
