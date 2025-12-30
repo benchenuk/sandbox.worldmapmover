@@ -280,9 +280,32 @@ function onDragMove(e) {
         latDiff = 0;
     }
 
+    // Calculate scaling factor based on latitude change (Mercator projection)
+    // Scale factor k = cos(startLat) / cos(newLat)
+    // We clamp latitude to +/- 85 degrees to avoid extreme scaling or division by zero
+    const CLAMP_LIMIT = 85;
+    const startLatClamped = Math.max(-CLAMP_LIMIT, Math.min(CLAMP_LIMIT, dragStartLatLng.lat));
+    // If snapToLat is on, effective new lat is same as start lat
+    const currentLatEffective = snapToLat ? dragStartLatLng.lat : currentLatLng.lat;
+    const endLatClamped = Math.max(-CLAMP_LIMIT, Math.min(CLAMP_LIMIT, currentLatEffective));
+
+    const rad = Math.PI / 180;
+    const startScale = Math.cos(startLatClamped * rad);
+    const endScale = Math.cos(endLatClamped * rad);
+
+    // Maintain minimum scale to prevent division by zero or negative
+    const k = (endScale > 0.001) ? (startScale / endScale) : 1;
+
     // Apply diff to all coordinates
     const newGeoJSON = JSON.parse(JSON.stringify(floatingLayer.toGeoJSON().features[0]));
-    newGeoJSON.geometry.coordinates = shiftCoordinates(dragStartCoordinates, latDiff, lngDiff, newGeoJSON.geometry.type);
+    newGeoJSON.geometry.coordinates = shiftCoordinates(
+        dragStartCoordinates,
+        latDiff,
+        lngDiff,
+        dragStartLatLng.lng, // Anchor Longitude
+        k,                   // Scale Factor
+        newGeoJSON.geometry.type
+    );
 
     // Update Layer
     floatingLayer.clearLayers();
@@ -304,13 +327,21 @@ function onDragEnd() {
 }
 
 // Recursively shift coordinates
-function shiftCoordinates(coords, dLat, dLng, type) {
+function shiftCoordinates(coords, dLat, dLng, anchorLng, scale, type) {
     if (typeof coords[0] === 'number') {
         // [lng, lat]
-        return [coords[0] + dLng, coords[1] + dLat];
+        const originalLng = coords[0];
+        const originalLat = coords[1];
+
+        // Scale longitude relative to the anchor, then translate
+        // Formula: NewLng = AnchorLng + dLng + (OriginalLng - AnchorLng) * scale
+        const newLng = anchorLng + dLng + (originalLng - anchorLng) * scale;
+        const newLat = originalLat + dLat;
+
+        return [newLng, newLat];
     }
 
-    return coords.map(sub => shiftCoordinates(sub, dLat, dLng, type));
+    return coords.map(sub => shiftCoordinates(sub, dLat, dLng, anchorLng, scale, type));
 }
 
 function updateInfoCoords(latlng) {

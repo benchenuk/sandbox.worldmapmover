@@ -62,7 +62,10 @@ The application will be a client-side Single Page Application (SPA) with no back
                 - New Coordinate = `(originalLat + deltaLat, originalLng + deltaLng)`.
             - Update `floatingLayer` with new GeoJSON.
         - **Cleanup**: Remove event listeners when resetting or selecting a new country to prevent memory leaks.
-    - **Distortion Handling**: By modifying the LatLng coordinates directly and letting Leaflet render them, the Web Mercator projection will automatically handle the size/shape distortion (e.g., countries will stretch vertically as they move North).
+    - **Distortion Handling**: 
+        - **Vertical**: Web Mercator automatically stretches the vertical axis as the shape moves North/South (preserving the "height in degrees").
+        - **Horizontal**: To maintain the correct aspect ratio (conformal shape), we must manually scale the longitude width of the shape.
+        - **Algorithm**: `NewLng = AnchorLng + dLng + (OriginalLng - AnchorLng) * (cos(StartLat) / cos(NewLat))`. This expands/shrinks the width of the country inversely to the latitude cosine, matching the Mercator projection's scale factor.
 
 ### 2.4 User Interface
 - **Controls**:
