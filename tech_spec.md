@@ -14,7 +14,7 @@ The application will be a client-side Single Page Application (SPA) with no back
 ## 2. Component Design
 
 ### 2.1 Map Component
-- **Initialization**: Leaflet map centered at (20, 0) with zoom level 2.
+- **Initialization**: Leaflet map centered at (15, 0) with zoom level 3 to fill the viewport and reduce vertical white space.
 - **Base Layer**: OpenStreetMap or CartoDB Positron (clean, minimal styling) tiles.
 - **Projection**: Default `EPSG:3857` (Web Mercator).
 
@@ -69,12 +69,12 @@ The application will be a client-side Single Page Application (SPA) with no back
 
 ### 2.4 User Interface
 - **Controls**:
-    - **Top Right Panel**:
+    - **Bottom Left Panel**:
+        - Title: "Move Country"
         - Toggle: "Snap Latitude" (Checkbox/Switch).
-        - Button: "Reset" (Clears selection).
-    - **Info Panel** (Bottom Left):
-        - Shows "Moving: [Country Name]".
-        - "Current Lat: [Value]".
+        - Button: "Reset Map" (Clears selection).
+    - **Bottom Right**:
+        - Standard Leaflet zoom controls.
 
 - **Country Labels**:
     - **Implementation**: Use Leaflet DivIcon markers positioned at country centroids.

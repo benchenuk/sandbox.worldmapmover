@@ -48,7 +48,7 @@ body {
 /* Controls Overlay */
 #controls {
     bottom: 2rem;
-    right: 2rem;
+    left: 2rem;
     width: 240px;
     padding: 1.25rem;
 }

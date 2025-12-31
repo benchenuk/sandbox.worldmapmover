@@ -7,9 +7,7 @@ A web-based application that allows users to interactively select a country and 
 
 ### 2.1 Country Selection
 - Users must be able to select a country to "move".
-- Selection can be done via:
-    - Clicking on a country on the map.
-    - Searching/Selecting from a dropdown list.
+- Selection is done by clicking on a country on the map.
 
 ### 2.2 Moving the Country
 - Once selected, a "ghost" or "clone" of the country's shape is created.
@@ -23,21 +21,21 @@ A web-based application that allows users to interactively select a country and 
 - The country's latitude remains constant, meaning its size/shape distortion remains constant during the move.
 
 ### 2.4 Visual Feedback
-- The original country location remains visible (potentially dimmed or outlined) to allow comparison.
-- The moving country should be semi-transparent or distinctively colored.
-- Display current coordinates (Latitude/Longitude) of the center of the moving country.
+- The original country location remains visible (dimmed) to allow comparison.
+- The moving country is distinctively colored (blue).
 - **Country Labels**: Display country names at their geographic centroids with dynamic opacity:
     - Selected country: Full opacity (100%) with bold text
     - Hovered country: High opacity (90%) with medium weight text
     - Other countries: Low opacity (30-50%) to reduce visual clutter
 
 ## 3. User Interface Requirements
-- **Main Map Area**: A full-screen or large interactive world map.
-- **Controls Overlay**:
-    - Country Selector (Dropdown/Input).
+- **Main Map Area**: A full-screen interactive world map, initialized at zoom level 3 to minimize white space.
+- **Controls Overlay (Bottom Left)**:
+    - Title: "Move Country"
     - Toggle Switch: "Lock Latitude" (On/Off).
-    - Reset Button: Return country to original position.
-- **Visual Style**: Clean, modern, "premium" feel as per general guidelines.
+    - Button: "Reset Map": Return country to original position.
+- **Zoom Controls (Bottom Right)**: Standard Leaflet zoom buttons.
+- **Visual Style**: Clean, modern, "glassmorphism" premium feel.
 
 ## 4. Non-Functional Requirements
 - **Performance**: Dragging must be smooth (60fps) with immediate visual feedback on distortion.

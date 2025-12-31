@@ -2,10 +2,11 @@
 const map = L.map('map', {
     zoomControl: false,
     minZoom: 2,
+    worldCopyJump: true,
     maxBounds: [[-90, -180], [90, 180]]
-}).setView([20, 0], 2);
+}).setView([15, 0], 3);
 
-L.control.zoom({ position: 'topright' }).addTo(map);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 // Add Base Layer (CartoDB Positron for clean look)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
