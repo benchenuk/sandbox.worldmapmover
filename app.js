@@ -212,7 +212,8 @@ function selectCountry(e) {
     }
 
     const layer = e.target;
-    selectedFeature = feature = layer.feature;
+    const feature = layer.feature;
+    selectedFeature = feature;
     originalFeature = JSON.parse(JSON.stringify(feature)); // Deep copy
 
     // Dim the original
