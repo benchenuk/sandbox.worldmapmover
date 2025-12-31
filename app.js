@@ -5,7 +5,7 @@ const map = L.map('map', {
     maxBounds: [[-90, -180], [90, 180]]
 }).setView([20, 0], 2);
 
-L.control.zoom({ position: 'bottomright' }).addTo(map);
+L.control.zoom({ position: 'topright' }).addTo(map);
 
 // Add Base Layer (CartoDB Positron for clean look)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
@@ -29,10 +29,7 @@ let snapToLat = false;
 // DOM Elements
 const snapToggle = document.getElementById('snap-lat-toggle');
 const resetBtn = document.getElementById('reset-btn');
-const infoPanel = document.getElementById('info-panel');
-const countryNameEl = document.getElementById('country-name');
-const currentLatEl = document.getElementById('current-lat');
-const currentLngEl = document.getElementById('current-lng');
+
 
 // Load Data
 fetch('countries.json')
@@ -236,10 +233,7 @@ function selectCountry(e) {
         }
     }).addTo(map);
 
-    // Update Info Panel
-    countryNameEl.textContent = feature.properties.name || feature.properties.admin || "Selected Country";
-    updateInfoCoords(e.latlng);
-    infoPanel.classList.remove('hidden');
+
 
     // Highlight selected country label
     updateLabelOpacity(selectedFeature.id, 'selected');
@@ -311,8 +305,7 @@ function onDragMove(e) {
     floatingLayer.clearLayers();
     floatingLayer.addData(newGeoJSON);
 
-    // Update Info
-    updateInfoCoords(currentLatLng);
+
 }
 
 function onDragEnd() {
@@ -344,10 +337,7 @@ function shiftCoordinates(coords, dLat, dLng, anchorLng, scale, type) {
     return coords.map(sub => shiftCoordinates(sub, dLat, dLng, anchorLng, scale, type));
 }
 
-function updateInfoCoords(latlng) {
-    currentLatEl.textContent = latlng.lat.toFixed(2);
-    currentLngEl.textContent = latlng.lng.toFixed(2);
-}
+
 
 // Controls
 snapToggle.addEventListener('change', (e) => {
@@ -368,7 +358,7 @@ resetBtn.addEventListener('click', () => {
         countriesLayer.resetStyle(countriesLayer.getLayer(countriesLayer.getLayerId(selectedFeature)));
         selectedFeature = null;
     }
-    infoPanel.classList.add('hidden');
+
     isDragging = false;
     map.dragging.enable();
 
